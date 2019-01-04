@@ -4,10 +4,10 @@ package hpcache
 // disk cache or net cache. We implementation cache with LRU algorithm.
 type Cache interface {
 	// Set set cache with key-value pair.
-	Set(key interface{}, value interface{})
+	Set(key string, value []byte)
 
 	// Get get cache with key, nil will be return if key is not exist.
-	Get(key interface{}) interface{}
+	Get(key string) []byte
 }
 
 func NewMemCache() Cache {
