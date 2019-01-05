@@ -56,6 +56,17 @@ func (dc *diskCache) Set(key string, value []byte) {
 
 }
 
+func (dc *diskCache) newHeader(dd *diskData) {
+	if dc.header != nil {
+		dd.next = dc.header
+		dc.header.previous = dd
+		dc.header = dd
+	} else {
+		dc.header = dd
+		dc.tail = dd
+	}
+}
+
 func (dc *diskCache) moveToHeader(dd *diskData) {
 	if dd != dc.header {
 		if dd == dc.tail {
