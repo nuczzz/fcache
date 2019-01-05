@@ -3,16 +3,17 @@ package hpcache
 import (
 	"io/ioutil"
 	"sync"
+	"time"
 )
 
+// diskData metadata of disk cache, but no value field of cache.
 type diskData struct {
 	// key disk cache key
 	key string
 
-	// value value of disk cache
-	value []byte
-
 	accessTime int64
+
+	accessCount int
 
 	expireTime int64
 
@@ -37,6 +38,9 @@ type diskCache struct {
 
 	// totalCount total count, contains hit count and missing count
 	totalCount int
+
+	header *diskData
+	tail *diskData
 }
 
 func (dc *diskCache) fileName(key string) string {
@@ -49,6 +53,23 @@ func (dc *diskCache) Set(key string, value []byte) {
 	dc.lock.Lock()
 	defer dc.lock.Unlock()
 
+
+}
+
+func (dc *diskCache) moveToHeader(dd *diskData) {
+	if dd != dc.header {
+		if dd == dc.tail {
+			dc.tail = dd.previous
+			dd.previous.next = nil
+		} else {
+			dd.next.previous = dd.previous
+			dd.previous.next = dd.next
+		}
+		dd.previous = nil
+		dd.next = dc.header
+		dc.header.previous = dd
+		dc.header = dd
+	}
 }
 
 func (dc *diskCache) Get(key string) []byte {
@@ -56,6 +77,21 @@ func (dc *diskCache) Get(key string) []byte {
 
 	dc.lock.Lock()
 	defer dc.lock.Unlock()
+
+	dc.totalCount++
+	if data, ok := dc.m[key]; ok {
+		dc.hitCount++
+
+		data.accessTime = time.Now().Unix()
+		data.accessCount++
+
+		dc.moveToHeader(data)
+		value, err := ioutil.ReadFile(dc.fileName(key))
+		if err != nil {
+			return nil
+		}
+		return value
+	}
 
 	return nil
 }
