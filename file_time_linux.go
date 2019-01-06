@@ -1,6 +1,6 @@
 // +build linux
 
-package hpcache
+package fcache
 
 import (
 	"fmt"

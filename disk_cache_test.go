@@ -1,4 +1,4 @@
-package hpcache
+package fcache
 
 import (
 	"fmt"
@@ -15,13 +15,13 @@ func traceDiskCacheLinkedList(dc *diskCache, t *testing.T) {
 }
 
 func TestDiskCacheFileName(t *testing.T) {
-	cache := &diskCache{dir: defaultDiskCacheDir}
+	cache := &diskCache{dir: DefaultDiskCacheDir}
 	t.Log(cache.fileName("test"))
 }
 
 func TestDiskCacheCreateFile(t *testing.T) {
 	cache := &diskCache{
-		dir:     defaultDiskCacheDir,
+		dir:     DefaultDiskCacheDir,
 		m:       make(map[string]*diskData),
 		maxSize: 100, //bytes
 	}
@@ -33,7 +33,7 @@ func TestDiskCacheCreateFile(t *testing.T) {
 
 func TestDiskCacheSet(t *testing.T) {
 	cache := &diskCache{
-		dir:     defaultDiskCacheDir,
+		dir:     DefaultDiskCacheDir,
 		m:       make(map[string]*diskData),
 		maxSize: 100, //bytes
 	}
@@ -46,7 +46,7 @@ func TestDiskCacheSet(t *testing.T) {
 
 func TestDiskCacheGet(t *testing.T) {
 	cache := &diskCache{
-		dir:     defaultDiskCacheDir,
+		dir:     DefaultDiskCacheDir,
 		m:       make(map[string]*diskData),
 		maxSize: 100, //bytes
 	}
@@ -61,7 +61,7 @@ func TestDiskCacheGet(t *testing.T) {
 
 func TestDiskCacheEliminate(t *testing.T) {
 	cache := &diskCache{
-		dir:     defaultDiskCacheDir,
+		dir:     DefaultDiskCacheDir,
 		m:       make(map[string]*diskData),
 		maxSize: 100, //bytes
 	}
@@ -79,7 +79,7 @@ func TestDiskCacheEliminate(t *testing.T) {
 
 func TestDiskCacheInit(t *testing.T) {
 	cache := &diskCache{
-		dir:     defaultDiskCacheDir,
+		dir:     DefaultDiskCacheDir,
 		m:       make(map[string]*diskData),
 		maxSize: 50, //bytes
 	}

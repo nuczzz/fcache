@@ -1,4 +1,4 @@
-package hpcache
+package fcache
 
 import (
 	"crypto/md5"
@@ -6,11 +6,11 @@ import (
 )
 
 const (
-	MaxMemCacheSize    = 2 << 25 // 64M
-	DiskCacheThreshold = 2 << 20 // 1M
-	MaxDiskCacheSize   = 2 << 32 // 4G
+	//diskCacheThreshold = 2 << 20 // 1M
 
-	defaultDiskCacheDir = "./cache/"
+	DefaultMaxMemCacheSize  = 2 << 25 // 64M
+	DefaultMaxDiskCacheSize = 2 << 32 // 4G
+	DefaultDiskCacheDir     = "./cache/"
 )
 
 func MD5(src string) string {

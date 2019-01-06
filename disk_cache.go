@@ -1,4 +1,4 @@
-package hpcache
+package fcache
 
 import (
 	"io/ioutil"
@@ -32,8 +32,8 @@ type diskCache struct {
 	// dir directory of disk cache
 	dir string
 
-	// NeedCryptKey whether or not crypt key when Set and Get cache, default false.
-	NeedCryptKey bool
+	// needCryptKey whether or not crypt key when Set and Get cache, default false.
+	needCryptKey bool
 
 	// m map of disk cache data, key is file name
 	m map[string]*diskData
@@ -155,7 +155,7 @@ func (dc *diskCache) eliminate() {
 }
 
 func (dc *diskCache) Set(key string, value []byte) {
-	if dc.NeedCryptKey {
+	if dc.needCryptKey {
 		key = MD5(key)
 	}
 
@@ -223,7 +223,7 @@ func (dc *diskCache) moveToHeader(dd *diskData) {
 }
 
 func (dc *diskCache) Get(key string) []byte {
-	if dc.NeedCryptKey {
+	if dc.needCryptKey {
 		key = MD5(key)
 	}
 
@@ -301,12 +301,20 @@ func (dc *diskCache) init() error {
 	return nil
 }
 
-func newDiskCache() Cache {
-	dc := &diskCache{}
-	if dc.dir != "" {
-		if dc.dir[len(dc.dir)-1] != '/' {
-			dc.dir += "/"
-		}
+func newDiskCache(maxSize int64, needCryptKey bool, cacheDir string) Cache {
+	if maxSize <= 0 {
+		maxSize = DefaultMaxDiskCacheSize
 	}
-	return dc
+	if cacheDir == "" {
+		cacheDir = DefaultDiskCacheDir
+	}
+	if cacheDir[len(cacheDir)-1] != '/' {
+		cacheDir += "/"
+	}
+	return &diskCache{
+		maxSize:      maxSize,
+		needCryptKey: needCryptKey,
+		dir:          cacheDir,
+		m:            make(map[string]*diskData),
+	}
 }

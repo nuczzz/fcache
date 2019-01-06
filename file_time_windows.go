@@ -1,6 +1,6 @@
 // +build windows
 
-package hpcache
+package fcache
 
 import (
 	"fmt"

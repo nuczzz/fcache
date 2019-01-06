@@ -1,4 +1,4 @@
-package hpcache
+package fcache
 
 import (
 	"fmt"
@@ -57,17 +57,16 @@ func TestMemCacheMaxSize(t *testing.T) {
 func TestMemCache(t *testing.T) {
 	cache := &memCache{
 		m:       make(map[interface{}]*memData),
-		maxSize: 100,
+		maxSize: 10,
 	}
 	t.Logf("%#v", cache)
 
-	for i := 0; i < 9; i++ {
-		cache.Set(fmt.Sprintf("key%d", i), []byte("1234567890"))
-	}
-	t.Log(len(cache.m))
+	cache.Set("key1", []byte("123456789"))
+	cache.Set("key2", []byte("0"))
+	cache.Set("key3", []byte("1"))
+	t.Log(cache.Get("key3"))
+	t.Log(cache.Get("key1"))
 
-	cache.Get("key3")
 	t.Logf("%#v", cache)
-
 	traceMemoryCacheLinkedList(cache, t)
 }

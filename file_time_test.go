@@ -1,4 +1,4 @@
-package hpcache
+package fcache
 
 import (
 	"os"
