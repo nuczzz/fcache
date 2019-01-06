@@ -14,13 +14,13 @@ func traceDiskCacheLinkedList(dc *diskCache, t *testing.T) {
 }
 
 func TestDiskCacheFileName(t *testing.T) {
-	cache := &diskCache{dir: defaultDiskCachePath}
+	cache := &diskCache{dir: defaultDiskCacheDir}
 	t.Log(cache.fileName("test"))
 }
 
 func TestDiskCacheCreateFile(t *testing.T) {
 	cache := &diskCache{
-		dir:     defaultDiskCachePath,
+		dir:     defaultDiskCacheDir,
 		m:       make(map[string]*diskData),
 		maxSize: 100, //bytes
 	}
@@ -32,7 +32,7 @@ func TestDiskCacheCreateFile(t *testing.T) {
 
 func TestDiskCacheSet(t *testing.T) {
 	cache := &diskCache{
-		dir:     defaultDiskCachePath,
+		dir:     defaultDiskCacheDir,
 		m:       make(map[string]*diskData),
 		maxSize: 100, //bytes
 	}
@@ -45,7 +45,7 @@ func TestDiskCacheSet(t *testing.T) {
 
 func TestDiskCacheGet(t *testing.T) {
 	cache := &diskCache{
-		dir:     defaultDiskCachePath,
+		dir:     defaultDiskCacheDir,
 		m:       make(map[string]*diskData),
 		maxSize: 100, //bytes
 	}
@@ -60,7 +60,7 @@ func TestDiskCacheGet(t *testing.T) {
 
 func TestDiskCacheEliminate(t *testing.T) {
 	cache := &diskCache{
-		dir:     defaultDiskCachePath,
+		dir:     defaultDiskCacheDir,
 		m:       make(map[string]*diskData),
 		maxSize: 100, //bytes
 	}

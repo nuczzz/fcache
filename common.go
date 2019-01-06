@@ -10,7 +10,7 @@ const (
 	DiskCacheThreshold = 2 << 20 // 1M
 	MaxDiskCacheSize   = 2 << 32 // 4G
 
-	defaultDiskCachePath = "./cache/"
+	defaultDiskCacheDir = "./cache/"
 )
 
 func MD5(src string) string {

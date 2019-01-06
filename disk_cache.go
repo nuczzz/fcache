@@ -1,11 +1,13 @@
 package hpcache
 
 import (
-	"github.com/goharbor/harbor/src/common/utils/log"
+	"log"
 	"io/ioutil"
 	"os"
 	"sync"
 	"time"
+	"syscall"
+	"fmt"
 )
 
 // diskData metadata of disk cache, but no value field of cache.
@@ -92,7 +94,7 @@ func (dc *diskCache) eliminate() {
 		delete(dc.m, temp.key)
 
 		if err := os.Remove(dc.fileName(temp.key)); err != nil && !os.IsNotExist(err) {
-			log.Error(err)
+			log.Fatal(err)
 		}
 	}
 }
@@ -107,7 +109,7 @@ func (dc *diskCache) Set(key string, value []byte) {
 
 	// create file
 	if err := dc.createFile(key, value); err != nil {
-		log.Error(err)
+		log.Fatal(err)
 		return
 	}
 
@@ -191,8 +193,23 @@ func (dc *diskCache) Get(key string) []byte {
 	return nil
 }
 
-// init read disk cache info when create new disk cache
+// initDir check disk cache directory exist or not,
+// create it if not exist.
+func (dc *diskCache) initDir() error {
+	fd, err := os.Open(dc.dir)
+	if os.IsNotExist(err) {
+		return os.MkdirAll(dc.dir, 0755)
+	}
+	fd.Close()
+	return nil
+}
+
+// init read disk cache file info when create new disk cache
 func (dc *diskCache) init() error {
+	if err := dc.initDir(); err != nil {
+		return err
+	}
+
 	files, err := ioutil.ReadDir(dc.dir)
 	if err != nil {
 		return err
@@ -201,7 +218,14 @@ func (dc *diskCache) init() error {
 		if file.IsDir() {
 			continue
 		}
-		//todo
+
+		fInfo, err := os.Stat(file.Name())
+		if err != nil {
+			return err
+		}
+		stat := fInfo.Sys().(*syscall.Win32FileAttributeData)
+		accessTime := stat.LastAccessTime.Nanoseconds()/1e6
+		fmt.Println(accessTime)
 	}
 
 	return nil
