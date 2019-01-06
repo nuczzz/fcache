@@ -18,7 +18,7 @@ type diskData struct {
 
 	accessTime int64
 
-	accessCount int
+	accessCount int64
 
 	expireTime int64
 
@@ -48,10 +48,10 @@ type diskCache struct {
 	curSize int64
 
 	// hitCount hit cache count
-	hitCount int
+	hitCount int64
 
 	// totalCount total count, contains hit count and missing count
-	totalCount int
+	totalCount int64
 
 	header *diskData
 	tail   *diskData

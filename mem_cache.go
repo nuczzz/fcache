@@ -45,16 +45,16 @@ type memCache struct {
 	lock sync.RWMutex
 
 	// maxSize max size of memory cache data(byte).
-	maxSize int
+	maxSize int64
 
 	// curSize current size of memory cache data.
-	curSize int
+	curSize int64
 
 	// hitCount hit cache count
-	hitCount int
+	hitCount int64
 
 	// totalCount total count, contains hit count and missing count
-	totalCount int
+	totalCount int64
 }
 
 // moveToHeader move cache node to header
@@ -90,8 +90,8 @@ func (mc *memCache) eliminate() {
 	length := mc.maxSize / 10
 	for mc.tail != nil && length > 0 {
 		temp := mc.tail
-		length -= len(temp.value)
-		mc.curSize -= len(temp.value)
+		length -= int64(len(temp.value))
+		mc.curSize -= int64(len(temp.value))
 
 		mc.tail = temp.previous
 		temp.previous = nil
@@ -117,7 +117,7 @@ func (mc *memCache) Set(key string, value []byte) {
 
 	if data, ok := mc.m[key]; ok {
 		mc.moveToHeader(data)
-		netCap := len(value) - len(data.value)
+		netCap := int64(len(value) - len(data.value))
 		if mc.curSize+netCap > mc.maxSize {
 			mc.eliminate()
 		}
@@ -126,10 +126,10 @@ func (mc *memCache) Set(key string, value []byte) {
 		data.accessCount++
 		data.accessTime = time.Now().Unix()
 	} else {
-		if mc.curSize+len(value) > mc.maxSize {
+		if mc.curSize+int64(len(value)) > mc.maxSize {
 			mc.eliminate()
 		}
-		mc.curSize += len(value)
+		mc.curSize += int64(len(value))
 		newData := &memData{
 			key:         key,
 			value:       value,
