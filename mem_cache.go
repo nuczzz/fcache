@@ -33,6 +33,9 @@ type memCache struct {
 	// and map value is file data info.
 	m map[interface{}]*memData
 
+	// NeedCryptKey whether or not crypt key when Set and Get cache, default false.
+	NeedCryptKey bool
+
 	// double linked list header
 	header *memData
 	// double linked list tail
@@ -105,7 +108,9 @@ func (mc *memCache) eliminate() {
 
 // Set set memory cache with key-value pair, and covered if key already exist.
 func (mc *memCache) Set(key string, value []byte) {
-	key = MD5(key)
+	if mc.NeedCryptKey {
+		key = MD5(key)
+	}
 
 	mc.lock.Lock()
 	defer mc.lock.Unlock()
@@ -138,7 +143,9 @@ func (mc *memCache) Set(key string, value []byte) {
 
 // Get get memory cache with key, a error will be return if key is not exist.
 func (mc *memCache) Get(key string) []byte {
-	key = MD5(key)
+	if mc.NeedCryptKey {
+		key = MD5(key)
+	}
 
 	mc.lock.RLock()
 	defer mc.lock.RUnlock()

@@ -32,6 +32,9 @@ type diskCache struct {
 	// dir directory of disk cache
 	dir string
 
+	// NeedCryptKey whether or not crypt key when Set and Get cache, default false.
+	NeedCryptKey bool
+
 	// m map of disk cache data, key is file name
 	m map[string]*diskData
 
@@ -58,6 +61,18 @@ func (dc *diskCache) fileName(key string) string {
 	return dc.dir + key
 }
 
+func (dc *diskCache) createFile(key string, value []byte) error {
+	fd, err := os.Create(dc.fileName(key))
+	if err != nil {
+		return err
+	}
+	defer fd.Close()
+	if _, err = fd.Write(value); err != nil {
+		return err
+	}
+	return nil
+}
+
 func (dc *diskCache) eliminate() {
 	length := dc.maxSize / 10
 	for dc.tail != nil && length > 0 {
@@ -82,20 +97,10 @@ func (dc *diskCache) eliminate() {
 	}
 }
 
-func (dc *diskCache) createFile(key string, value []byte) error {
-	fd, err := os.Create(dc.fileName(key))
-	if err != nil {
-		return err
-	}
-	defer fd.Close()
-	if _, err = fd.Write(value); err != nil {
-		return err
-	}
-	return nil
-}
-
 func (dc *diskCache) Set(key string, value []byte) {
-	key = MD5(key)
+	if dc.NeedCryptKey {
+		key = MD5(key)
+	}
 
 	dc.lock.Lock()
 	defer dc.lock.Unlock()
@@ -161,7 +166,9 @@ func (dc *diskCache) moveToHeader(dd *diskData) {
 }
 
 func (dc *diskCache) Get(key string) []byte {
-	key = MD5(key)
+	if dc.NeedCryptKey {
+		key = MD5(key)
+	}
 
 	dc.lock.Lock()
 	defer dc.lock.Unlock()
@@ -201,5 +208,11 @@ func (dc *diskCache) init() error {
 }
 
 func newDiskCache() Cache {
-	return &diskCache{}
+	dc := &diskCache{}
+	if dc.dir != "" {
+		if dc.dir[len(dc.dir)-1] != '/' {
+			dc.dir += "/"
+		}
+	}
+	return dc
 }

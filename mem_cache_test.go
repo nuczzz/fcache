@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func traceLRULinkedList(mc *memCache, t *testing.T) {
+func traceMemoryCacheLinkedList(mc *memCache, t *testing.T) {
 	temp := mc.header
 	for temp != nil {
 		t.Logf("key: %s, value: %s, count: %d", temp.key, string(temp.value), temp.accessCount)
@@ -31,7 +31,7 @@ func TestMemCacheMaxSize(t *testing.T) {
 	if len(cache1.m) != 12 {
 		t.Fatal("maxSize error")
 	}
-	traceLRULinkedList(cache1, t)
+	traceMemoryCacheLinkedList(cache1, t)
 
 	cache2 := &memCache{
 		m:       make(map[interface{}]*memData),
@@ -51,7 +51,7 @@ func TestMemCacheMaxSize(t *testing.T) {
 	if len(cache2.m) != 12 {
 		t.Fatal("maxSize error")
 	}
-	traceLRULinkedList(cache2, t)
+	traceMemoryCacheLinkedList(cache2, t)
 }
 
 func TestMemCache(t *testing.T) {
@@ -69,5 +69,5 @@ func TestMemCache(t *testing.T) {
 	cache.Get("key3")
 	t.Logf("%#v", cache)
 
-	traceLRULinkedList(cache, t)
+	traceMemoryCacheLinkedList(cache, t)
 }
