@@ -4,12 +4,17 @@ import (
 	"io/ioutil"
 	"sync"
 	"time"
+	"os"
+	"github.com/goharbor/harbor/src/common/utils/log"
 )
 
 // diskData metadata of disk cache, but no value field of cache.
 type diskData struct {
 	// key disk cache key
 	key string
+
+	// size size of cache data
+	size int
 
 	accessTime int64
 
@@ -33,6 +38,12 @@ type diskCache struct {
 	// lock lock of disk cache
 	lock sync.RWMutex
 
+	// maxSize max size of memory cache data(byte).
+	maxSize int
+
+	// curSize current size of memory cache data.
+	curSize int
+
 	// hitCount hit cache count
 	hitCount int
 
@@ -40,11 +51,35 @@ type diskCache struct {
 	totalCount int
 
 	header *diskData
-	tail *diskData
+	tail   *diskData
 }
 
 func (dc *diskCache) fileName(key string) string {
 	return dc.dir + key
+}
+
+func (dc *diskCache) eliminate() {
+	length := dc.maxSize / 10
+	for dc.tail != nil && length > 0 {
+		temp := dc.tail
+		length -= temp.size
+		dc.curSize -= temp.size
+
+		dc.tail = temp.previous
+		temp.previous = nil
+
+		if dc.tail != nil {
+			dc.tail.next = nil
+		} else {
+			dc.tail = nil
+			dc.header = nil
+		}
+		delete(dc.m, temp.key)
+
+		if err := os.Remove(dc.fileName(temp.key)); err != nil && !os.IsNotExist(err) {
+			log.Error(err)
+		}
+	}
 }
 
 func (dc *diskCache) Set(key string, value []byte) {
@@ -52,7 +87,6 @@ func (dc *diskCache) Set(key string, value []byte) {
 
 	dc.lock.Lock()
 	defer dc.lock.Unlock()
-
 
 }
 
