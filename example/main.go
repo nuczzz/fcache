@@ -13,11 +13,14 @@ func main() {
 	memCache.Set("key3", []byte("1"))
 	fmt.Println(memCache.Get("key3"))
 	fmt.Println(memCache.Get("key1"))
+	hit, total := memCache.GetHitInfo()
+	fmt.Printf("hit: %v, total: %v\n", hit, total)
 
 	diskCache := fcache.NewDiskCache(10, false, "./cache")
 	diskCache.Set("key1", []byte("123456789"))
 	diskCache.Set("key2", []byte("0"))
 	diskCache.Set("key3", []byte("1"))
 	fmt.Println(diskCache.Get("key3"))
-	fmt.Println(diskCache.Get("key1"))
+	hit, total = diskCache.GetHitInfo()
+	fmt.Printf("hit: %v, total: %v\n", hit, total)
 }

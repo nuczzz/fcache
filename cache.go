@@ -8,6 +8,9 @@ type Cache interface {
 
 	// Get get cache with key, nil will be return if key is not exist.
 	Get(key string) []byte
+
+	// GetHitInfo get cache hit info, return the count of hit visitor and the count of total visitor
+	GetHitInfo() (hitCount, totalCount int64)
 }
 
 func NewMemCache(maxSize int64, needCryptKey bool) Cache {

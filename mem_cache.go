@@ -166,6 +166,13 @@ func (mc *memCache) Get(key string) []byte {
 	return nil
 }
 
+func (mc *memCache) GetHitInfo() (int64, int64) {
+	mc.lock.RLock()
+	defer mc.lock.RUnlock()
+
+	return mc.hitCount, mc.totalCount
+}
+
 func newMemCache(maxSize int64, needCryptKey bool) Cache {
 	if maxSize <= 0 {
 		maxSize = DefaultMaxMemCacheSize

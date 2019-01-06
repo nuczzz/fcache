@@ -301,6 +301,13 @@ func (dc *diskCache) init() error {
 	return nil
 }
 
+func (dc *diskCache) GetHitInfo() (int64, int64) {
+	dc.lock.RLock()
+	defer dc.lock.RUnlock()
+
+	return dc.hitCount, dc.totalCount
+}
+
 func newDiskCache(maxSize int64, needCryptKey bool, cacheDir string) Cache {
 	if maxSize <= 0 {
 		maxSize = DefaultMaxDiskCacheSize
