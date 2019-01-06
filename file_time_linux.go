@@ -1,4 +1,13 @@
+// +build linux
+
 package hpcache
+
+import (
+	"fmt"
+	"os"
+	"syscall"
+	"time"
+)
 
 type FileTime struct {
 	CreateTime int64
