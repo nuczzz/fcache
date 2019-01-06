@@ -1,13 +1,11 @@
 package hpcache
 
 import (
-	"log"
 	"io/ioutil"
+	"log"
 	"os"
 	"sync"
 	"time"
-	"syscall"
-	"fmt"
 )
 
 // diskData metadata of disk cache, but no value field of cache.
@@ -16,7 +14,7 @@ type diskData struct {
 	key string
 
 	// size size of cache data
-	size int
+	size int64
 
 	accessTime int64
 
@@ -44,10 +42,10 @@ type diskCache struct {
 	lock sync.RWMutex
 
 	// maxSize max size of memory cache data(byte).
-	maxSize int
+	maxSize int64
 
 	// curSize current size of memory cache data.
-	curSize int
+	curSize int64
 
 	// hitCount hit cache count
 	hitCount int
@@ -59,11 +57,68 @@ type diskCache struct {
 	tail   *diskData
 }
 
+func (dc *diskCache) exchange(node1, node2 *diskData) {
+	pre1 := node1.previous
+	pre2 := node2.previous
+	next1 := node1.next
+	next2 := node2.next
+
+	if pre1 != nil {
+		pre1.next = node2
+	}
+	node2.previous = pre1
+
+	if pre2 != nil {
+		pre2.next = node1
+
+	}
+	node1.previous = pre2
+
+	if next1 != nil {
+		next1.previous = node2
+
+	}
+	node2.next = next1
+
+	if next2 != nil {
+		next2.previous = node1
+	}
+	node1.next = next2
+
+	if dc.header == node1 {
+		dc.header = node2
+	} else if dc.header == node2 {
+		dc.header = node1
+	}
+	if dc.tail == node1 {
+		dc.tail = node2
+	} else if dc.tail == node2 {
+		dc.tail = node1
+	}
+}
+
+// sort sort double linked list by access time DESC
+func (dc *diskCache) sort() {
+	for i := dc.header; i != nil && i.next != nil; i = i.next {
+		t := i
+		for j := i.next; j != nil; j = j.next {
+			if t.accessTime < j.accessTime {
+				t = j
+			}
+		}
+		if i != t {
+			dc.exchange(i, t)
+		}
+	}
+}
+
 func (dc *diskCache) fileName(key string) string {
 	return dc.dir + key
 }
 
 func (dc *diskCache) createFile(key string, value []byte) error {
+	dc.initDir()
+
 	fd, err := os.Create(dc.fileName(key))
 	if err != nil {
 		return err
@@ -116,23 +171,23 @@ func (dc *diskCache) Set(key string, value []byte) {
 	// change metadata
 	if data, ok := dc.m[key]; ok {
 		dc.moveToHeader(data)
-		netCap := len(value) - data.size
+		netCap := int64(len(value)) - data.size
 		if dc.curSize+netCap > dc.maxSize {
 			dc.eliminate()
 		}
 		dc.curSize += netCap
 
 		data.accessCount++
-		data.accessTime = time.Now().Unix()
+		data.accessTime = time.Now().UnixNano()
 	} else {
-		if dc.curSize+len(value) > dc.maxSize {
+		if dc.curSize+int64(len(value)) > dc.maxSize {
 			dc.eliminate()
 		}
-		dc.curSize += len(value)
+		dc.curSize += int64(len(value))
 		newData := &diskData{
 			key:         key,
-			size:        len(value),
-			accessTime:  time.Now().Unix(),
+			size:        int64(len(value)),
+			accessTime:  time.Now().UnixNano(),
 			accessCount: 1,
 		}
 		dc.m[key] = newData
@@ -179,7 +234,7 @@ func (dc *diskCache) Get(key string) []byte {
 	if data, ok := dc.m[key]; ok {
 		dc.hitCount++
 
-		data.accessTime = time.Now().Unix()
+		data.accessTime = time.Now().UnixNano()
 		data.accessCount++
 
 		dc.moveToHeader(data)
@@ -193,8 +248,7 @@ func (dc *diskCache) Get(key string) []byte {
 	return nil
 }
 
-// initDir check disk cache directory exist or not,
-// create it if not exist.
+// initDir check disk cache directory exist or not, create it if not exist.
 func (dc *diskCache) initDir() error {
 	fd, err := os.Open(dc.dir)
 	if os.IsNotExist(err) {
@@ -215,18 +269,34 @@ func (dc *diskCache) init() error {
 		return err
 	}
 	for _, file := range files {
+		fileName := dc.fileName(file.Name())
 		if file.IsDir() {
 			continue
 		}
 
-		fInfo, err := os.Stat(file.Name())
+		fi, err := GetFileTime(fileName)
 		if err != nil {
 			return err
 		}
-		stat := fInfo.Sys().(*syscall.Win32FileAttributeData)
-		accessTime := stat.LastAccessTime.Nanoseconds()/1e6
-		fmt.Println(accessTime)
+		data := &diskData{
+			key:        file.Name(),
+			size:       file.Size(),
+			accessTime: fi.AccessTime,
+		}
+		// double linked list init
+		dc.newHeader(data)
+
+		// disk cache metadata init
+		dc.m[file.Name()] = data
+		if dc.curSize+file.Size() > dc.maxSize {
+			if err := os.Remove(fileName); err != nil {
+				log.Println(err)
+			}
+		} else {
+			dc.curSize += file.Size()
+		}
 	}
+	dc.sort()
 
 	return nil
 }

@@ -75,3 +75,16 @@ func TestDiskCacheEliminate(t *testing.T) {
 	traceDiskCacheLinkedList(cache, t)
 	t.Logf("%#v", cache)
 }
+
+func TestDiskCacheInit(t *testing.T) {
+	cache := &diskCache{
+		dir:     defaultDiskCacheDir,
+		m:       make(map[string]*diskData),
+		maxSize: 50, //bytes
+	}
+	if err := cache.init(); err != nil {
+		t.Fatal(err)
+	}
+	t.Logf("%#v", cache)
+	traceDiskCacheLinkedList(cache, t)
+}
