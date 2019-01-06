@@ -1,11 +1,11 @@
 package hpcache
 
 import (
+	"github.com/goharbor/harbor/src/common/utils/log"
 	"io/ioutil"
+	"os"
 	"sync"
 	"time"
-	"os"
-	"github.com/goharbor/harbor/src/common/utils/log"
 )
 
 // diskData metadata of disk cache, but no value field of cache.
@@ -82,12 +82,55 @@ func (dc *diskCache) eliminate() {
 	}
 }
 
+func (dc *diskCache) createFile(key string, value []byte) error {
+	fd, err := os.Create(dc.fileName(key))
+	if err != nil {
+		return err
+	}
+	defer fd.Close()
+	if _, err = fd.Write(value); err != nil {
+		return err
+	}
+	return nil
+}
+
 func (dc *diskCache) Set(key string, value []byte) {
 	key = MD5(key)
 
 	dc.lock.Lock()
 	defer dc.lock.Unlock()
 
+	// create file
+	if err := dc.createFile(key, value); err != nil {
+		log.Error(err)
+		return
+	}
+
+	// change metadata
+	if data, ok := dc.m[key]; ok {
+		dc.moveToHeader(data)
+		netCap := len(value) - data.size
+		if dc.curSize+netCap > dc.maxSize {
+			dc.eliminate()
+		}
+		dc.curSize += netCap
+
+		data.accessCount++
+		data.accessTime = time.Now().Unix()
+	} else {
+		if dc.curSize+len(value) > dc.maxSize {
+			dc.eliminate()
+		}
+		dc.curSize += len(value)
+		newData := &diskData{
+			key:         key,
+			size:        len(value),
+			accessTime:  time.Now().Unix(),
+			accessCount: 1,
+		}
+		dc.m[key] = newData
+		dc.newHeader(newData)
+	}
 }
 
 func (dc *diskCache) newHeader(dd *diskData) {
