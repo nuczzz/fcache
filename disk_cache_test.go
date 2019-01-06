@@ -3,6 +3,7 @@ package hpcache
 import (
 	"fmt"
 	"testing"
+	"time"
 )
 
 func traceDiskCacheLinkedList(dc *diskCache, t *testing.T) {
@@ -86,5 +87,7 @@ func TestDiskCacheInit(t *testing.T) {
 		t.Fatal(err)
 	}
 	t.Logf("%#v", cache)
+	time.Sleep(time.Second)
+	cache.Set("key10", []byte("1111"))
 	traceDiskCacheLinkedList(cache, t)
 }
