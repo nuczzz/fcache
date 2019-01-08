@@ -13,10 +13,16 @@ type Cache interface {
 	GetHitInfo() (hitCount, totalCount int64)
 }
 
-func NewMemCache(maxSize int64, needCryptKey bool) Cache {
-	return newMemCache(maxSize, needCryptKey)
+func NewMemCache(maxSize int64, needCryptKey bool, ttl ...int64) Cache {
+	if len(ttl) > 0 {
+		return newMemCache(maxSize, needCryptKey, ttl[0])
+	}
+	return newMemCache(maxSize, needCryptKey, 0)
 }
 
-func NewDiskCache(maxSize int64, needCryptKey bool, cacheDir string) Cache {
-	return newDiskCache(maxSize, needCryptKey, cacheDir)
+func NewDiskCache(maxSize int64, needCryptKey bool, cacheDir string, ttl ...int64) Cache {
+	if len(ttl) > 0 {
+		return newDiskCache(maxSize, needCryptKey, cacheDir, ttl[0])
+	}
+	return newDiskCache(maxSize, needCryptKey, cacheDir, 0)
 }

@@ -55,6 +55,9 @@ type diskCache struct {
 
 	header *diskData
 	tail   *diskData
+
+	// ttl time to live
+	ttl int64
 }
 
 func (dc *diskCache) exchange(node1, node2 *diskData) {
@@ -308,7 +311,7 @@ func (dc *diskCache) GetHitInfo() (int64, int64) {
 	return dc.hitCount, dc.totalCount
 }
 
-func newDiskCache(maxSize int64, needCryptKey bool, cacheDir string) Cache {
+func newDiskCache(maxSize int64, needCryptKey bool, cacheDir string, ttl int64) Cache {
 	if maxSize <= 0 {
 		maxSize = DefaultMaxDiskCacheSize
 	}
@@ -323,5 +326,6 @@ func newDiskCache(maxSize int64, needCryptKey bool, cacheDir string) Cache {
 		needCryptKey: needCryptKey,
 		dir:          cacheDir,
 		m:            make(map[string]*diskData),
+		ttl:          ttl,
 	}
 }

@@ -20,7 +20,7 @@ type memData struct {
 	accessCount int64
 
 	// expireTime expire time of memory cache data
-	//expireTime int64
+	expireTime int64
 
 	// double linked list
 	previous *memData
@@ -55,6 +55,9 @@ type memCache struct {
 
 	// totalCount total count, contains hit count and missing count
 	totalCount int64
+
+	// ttl time to live
+	ttl int64
 }
 
 // moveToHeader move cache node to header
@@ -173,7 +176,7 @@ func (mc *memCache) GetHitInfo() (int64, int64) {
 	return mc.hitCount, mc.totalCount
 }
 
-func newMemCache(maxSize int64, needCryptKey bool) Cache {
+func newMemCache(maxSize int64, needCryptKey bool, ttl int64) Cache {
 	if maxSize <= 0 {
 		maxSize = DefaultMaxMemCacheSize
 	}
@@ -182,5 +185,6 @@ func newMemCache(maxSize int64, needCryptKey bool) Cache {
 		maxSize:      maxSize,
 		needCryptKey: needCryptKey,
 		m:            make(map[interface{}]*memData),
+		ttl:          ttl,
 	}
 }
