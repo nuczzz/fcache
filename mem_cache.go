@@ -1,8 +1,9 @@
 package fcache
 
 import (
-	"lru"
 	"sync"
+
+	"github.com/nuczzz/lru"
 )
 
 type MemValue struct {

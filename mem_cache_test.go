@@ -3,12 +3,13 @@ package fcache
 import (
 	"fmt"
 	"testing"
-	"lru"
+
+	"github.com/nuczzz/lru"
 )
 
 func TestMemCacheMaxSize(t *testing.T) {
 	cache1 := &memCache{
-		m:       make(map[interface{}]*lru.Node),
+		m: make(map[interface{}]*lru.Node),
 	}
 	link := &lru.LRU{
 		MaxSize:            100,
@@ -31,7 +32,7 @@ func TestMemCacheMaxSize(t *testing.T) {
 	t.Log(cache1.lru.Traversal())
 
 	cache2 := &memCache{
-		m:       make(map[interface{}]*lru.Node),
+		m: make(map[interface{}]*lru.Node),
 	}
 	link = &lru.LRU{
 		MaxSize:            100,
