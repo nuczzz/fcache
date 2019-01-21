@@ -8,6 +8,7 @@ import (
 	"syscall"
 )
 
+// FileTime file's ctime, atime, mtime with nanoseconds
 type FileTime struct {
 	CreateTime int64
 	AccessTime int64

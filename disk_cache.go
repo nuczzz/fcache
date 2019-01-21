@@ -56,7 +56,7 @@ type diskCache struct {
 	header *diskData
 	tail   *diskData
 
-	// ttl time to live
+	// ttl time to live(second)
 	ttl int64
 }
 
@@ -171,6 +171,7 @@ func (dc *diskCache) Set(key string, value []byte) {
 		return
 	}
 
+	now := time.Now().Unix()
 	// change metadata
 	if data, ok := dc.m[key]; ok {
 		dc.moveToHeader(data)
@@ -181,17 +182,18 @@ func (dc *diskCache) Set(key string, value []byte) {
 		dc.curSize += netCap
 
 		data.accessCount++
-		data.accessTime = time.Now().UnixNano()
+		data.accessTime = now
+		data.expireTime = now + dc.ttl
 	} else {
 		if dc.curSize+int64(len(value)) > dc.maxSize {
 			dc.eliminate()
 		}
 		dc.curSize += int64(len(value))
 		newData := &diskData{
-			key:         key,
-			size:        int64(len(value)),
-			accessTime:  time.Now().UnixNano(),
-			accessCount: 1,
+			key:        key,
+			size:       int64(len(value)),
+			accessTime: now,
+			expireTime: now + dc.ttl,
 		}
 		dc.m[key] = newData
 		dc.newHeader(newData)
@@ -284,7 +286,7 @@ func (dc *diskCache) init() error {
 		data := &diskData{
 			key:        file.Name(),
 			size:       file.Size(),
-			accessTime: fi.AccessTime,
+			accessTime: fi.AccessTime / 1e6,
 		}
 		// double linked list init
 		dc.newHeader(data)
@@ -321,11 +323,12 @@ func newDiskCache(maxSize int64, needCryptKey bool, cacheDir string, ttl int64) 
 	if cacheDir[len(cacheDir)-1] != '/' {
 		cacheDir += "/"
 	}
-	return &diskCache{
+	/*return &diskCache{
 		maxSize:      maxSize,
 		needCryptKey: needCryptKey,
 		dir:          cacheDir,
 		m:            make(map[string]*diskData),
 		ttl:          ttl,
-	}
+	}*/
+	return nil
 }

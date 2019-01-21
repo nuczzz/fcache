@@ -3,21 +3,18 @@ package fcache
 import (
 	"fmt"
 	"testing"
+	"lru"
 )
-
-func traceMemoryCacheLinkedList(mc *memCache, t *testing.T) {
-	temp := mc.header
-	for temp != nil {
-		t.Logf("key: %s, value: %s, count: %d", temp.key, string(temp.value), temp.accessCount)
-		temp = temp.next
-	}
-}
 
 func TestMemCacheMaxSize(t *testing.T) {
 	cache1 := &memCache{
-		m:       make(map[interface{}]*memData),
-		maxSize: 100, //100 bytes
+		m:       make(map[interface{}]*lru.Node),
 	}
+	link := &lru.LRU{
+		MaxSize:            100,
+		DeleteNodeCallBack: cache1.deleteCallBack(),
+	}
+	cache1.lru = link
 	t.Logf("%#v", cache1)
 	// 50 bytes
 	for i := 0; i < 9; i++ {
@@ -31,12 +28,16 @@ func TestMemCacheMaxSize(t *testing.T) {
 	if len(cache1.m) != 12 {
 		t.Fatal("maxSize error")
 	}
-	traceMemoryCacheLinkedList(cache1, t)
+	t.Log(cache1.lru.Traversal())
 
 	cache2 := &memCache{
-		m:       make(map[interface{}]*memData),
-		maxSize: 100, //100 bytes
+		m:       make(map[interface{}]*lru.Node),
 	}
+	link = &lru.LRU{
+		MaxSize:            100,
+		DeleteNodeCallBack: cache2.deleteCallBack(),
+	}
+	cache2.lru = link
 	t.Logf("%#v", cache2)
 	// 50 bytes
 	for i := 0; i < 9; i++ {
@@ -51,14 +52,19 @@ func TestMemCacheMaxSize(t *testing.T) {
 	if len(cache2.m) != 12 {
 		t.Fatal("maxSize error")
 	}
-	traceMemoryCacheLinkedList(cache2, t)
+	t.Log(cache2.lru.Traversal())
 }
 
 func TestMemCache(t *testing.T) {
 	cache := &memCache{
-		m:       make(map[interface{}]*memData),
+		m:       make(map[interface{}]*lru.Node),
 		maxSize: 10,
 	}
+	link := &lru.LRU{
+		MaxSize:            100,
+		DeleteNodeCallBack: cache.deleteCallBack(),
+	}
+	cache.lru = link
 	t.Logf("%#v", cache)
 
 	cache.Set("key1", []byte("123456789"))
@@ -68,5 +74,5 @@ func TestMemCache(t *testing.T) {
 	t.Log(cache.Get("key1"))
 
 	t.Logf("%#v", cache)
-	traceMemoryCacheLinkedList(cache, t)
+	t.Log(cache.lru.Traversal())
 }
