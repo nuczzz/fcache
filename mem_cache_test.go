@@ -3,21 +3,11 @@ package fcache
 import (
 	"fmt"
 	"testing"
-
-	"github.com/nuczzz/lru"
 )
 
 func TestMemCacheMaxSize(t *testing.T) {
-	cache1 := &memCache{
-		m: make(map[interface{}]*lru.Node),
-	}
-	link := &lru.LRU{
-		MaxSize:            100,
-		DeleteNodeCallBack: cache1.deleteCallBack(),
-	}
-	cache1.lru = link
+	cache1 := newMemCache(100, false, 0).(*memCache)
 	t.Logf("%#v", cache1)
-	// 50 bytes
 	for i := 0; i < 9; i++ {
 		cache1.Set(fmt.Sprintf("key%d", i), []byte("1234567890"))
 	}
@@ -31,16 +21,8 @@ func TestMemCacheMaxSize(t *testing.T) {
 	}
 	t.Log(cache1.lru.Traversal())
 
-	cache2 := &memCache{
-		m: make(map[interface{}]*lru.Node),
-	}
-	link = &lru.LRU{
-		MaxSize:            100,
-		DeleteNodeCallBack: cache2.deleteCallBack(),
-	}
-	cache2.lru = link
+	cache2 := newMemCache(100, false, 0).(*memCache)
 	t.Logf("%#v", cache2)
-	// 50 bytes
 	for i := 0; i < 9; i++ {
 		cache2.Set(fmt.Sprintf("key%d", i), []byte("1234567890"))
 	}
@@ -57,15 +39,7 @@ func TestMemCacheMaxSize(t *testing.T) {
 }
 
 func TestMemCache(t *testing.T) {
-	cache := &memCache{
-		m:       make(map[interface{}]*lru.Node),
-		maxSize: 10,
-	}
-	link := &lru.LRU{
-		MaxSize:            100,
-		DeleteNodeCallBack: cache.deleteCallBack(),
-	}
-	cache.lru = link
+	cache := newMemCache(100, false, 0).(*memCache)
 	t.Logf("%#v", cache)
 
 	cache.Set("key1", []byte("123456789"))

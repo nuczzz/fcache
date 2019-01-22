@@ -6,14 +6,6 @@ import (
 	"github.com/nuczzz/lru"
 )
 
-type MemValue struct {
-	Value []byte
-}
-
-func (mv MemValue) Len() int64 {
-	return int64(len(mv.Value))
-}
-
 // memCache memory cache.
 type memCache struct {
 	// m map of memory cache.
@@ -63,7 +55,7 @@ func (mc *memCache) Set(key string, value []byte) error {
 			return err
 		}
 	}
-	v := MemValue{Value: value}
+	v := CacheValue{Value: value}
 	// memory cache ignore this error
 	newNode, _ := mc.lru.AddNewNode(key, v)
 	mc.curSize += newNode.Length
@@ -89,7 +81,7 @@ func (mc *memCache) Get(key string) ([]byte, error) {
 		}
 
 		mc.hitCount++
-		return node.Value.(MemValue).Value, nil
+		return node.Value.(CacheValue).Value, nil
 	}
 	return nil, nil
 }

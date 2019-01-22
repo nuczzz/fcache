@@ -1,5 +1,13 @@
 package fcache
 
+type CacheValue struct {
+	Value []byte
+}
+
+func (mv CacheValue) Len() int64 {
+	return int64(len(mv.Value))
+}
+
 // Cache cache interface definition.The cache can be memory cache,
 // disk cache or net cache. We implementation cache with LRU algorithm.
 type Cache interface {
