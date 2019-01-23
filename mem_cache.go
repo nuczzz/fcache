@@ -41,6 +41,13 @@ func (mc *memCache) deleteCallBack() func(key interface{}) error {
 	}
 }
 
+func (mc *memCache) addNodeCallback() func(*lru.Node) {
+	return func(node *lru.Node) {
+		mc.curSize += node.Length
+		mc.m[node.Key] = node
+	}
+}
+
 // Set set memory cache with key-value pair, and covered if key already exist.
 func (mc *memCache) Set(key string, value []byte) error {
 	if mc.needCryptKey {
@@ -57,10 +64,7 @@ func (mc *memCache) Set(key string, value []byte) error {
 	}
 	v := CacheValue{Value: value}
 	// memory cache ignore this error
-	newNode, _ := mc.lru.AddNewNode(key, v)
-	mc.curSize += newNode.Length
-	mc.m[key] = newNode
-	return nil
+	return mc.lru.AddNewNode(key, v)
 }
 
 // Get get memory cache with key, a error will be return if key is not exist.
@@ -106,6 +110,7 @@ func newMemCache(maxSize int64, needCryptKey bool, ttl int64) Cache {
 	link := &lru.LRU{
 		MaxSize:            maxSize,
 		TTL:                ttl,
+		AddNodeCallBack:    mc.addNodeCallback(),
 		DeleteNodeCallBack: mc.deleteCallBack(),
 	}
 	mc.lru = link

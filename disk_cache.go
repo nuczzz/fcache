@@ -2,9 +2,10 @@ package fcache
 
 import (
 	"io/ioutil"
-	"lru"
 	"os"
 	"sync"
+
+	"github.com/nuczzz/lru"
 )
 
 // diskCache disk cache
@@ -56,6 +57,13 @@ func (dc *diskCache) createFile(key string, value []byte) error {
 	return nil
 }
 
+func (dc *diskCache) addNodeCallback() func(node *lru.Node) {
+	return func(node *lru.Node) {
+		dc.curSize += node.Length
+		dc.m[node.Key] = node
+	}
+}
+
 func (dc *diskCache) Set(key string, value []byte) error {
 	if dc.needCryptKey {
 		key = MD5(key)
@@ -70,13 +78,7 @@ func (dc *diskCache) Set(key string, value []byte) error {
 		}
 	}
 	v := CacheValue{Value: value}
-	newNode, err := dc.lru.AddNewNode(key, v)
-	if err != nil {
-		return err
-	}
-	dc.curSize += newNode.Length
-	dc.m[key] = newNode
-	return nil
+	return dc.lru.AddNewNode(key, v)
 }
 
 func (dc *diskCache) Get(key string) ([]byte, error) {
@@ -170,6 +172,7 @@ func newDiskCache(maxSize int64, needCryptKey bool, cacheDir string, ttl int64) 
 	link := &lru.LRU{
 		MaxSize:            maxSize,
 		TTL:                ttl,
+		AddNodeCallBack:    dc.addNodeCallback(),
 		DeleteNodeCallBack: dc.deleteCallBack(),
 		SetValue:           dc.setValue(),
 		GetValue:           dc.getValue(),

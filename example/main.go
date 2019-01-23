@@ -3,8 +3,7 @@ package main
 import (
 	"fmt"
 
-	//"github.com/nuczzz/fcache"
-	"fcache"
+	"github.com/nuczzz/fcache"
 )
 
 func main() {
