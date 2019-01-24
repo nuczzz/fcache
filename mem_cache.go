@@ -20,12 +20,6 @@ type memCache struct {
 	// lock lock of memory cache data.
 	lock sync.RWMutex
 
-	// maxSize max size of memory cache data(byte).
-	maxSize int64
-
-	// curSize current size of memory cache data.
-	curSize int64
-
 	// hitCount hit cache count
 	hitCount int64
 
@@ -35,7 +29,6 @@ type memCache struct {
 
 func (mc *memCache) deleteCallBack() func(key interface{}) error {
 	return func(key interface{}) error {
-		mc.curSize -= mc.m[key].Length
 		delete(mc.m, key)
 		return nil
 	}
@@ -43,7 +36,6 @@ func (mc *memCache) deleteCallBack() func(key interface{}) error {
 
 func (mc *memCache) addNodeCallback() func(*lru.Node) {
 	return func(node *lru.Node) {
-		mc.curSize += node.Length
 		mc.m[node.Key] = node
 	}
 }
@@ -103,7 +95,6 @@ func newMemCache(maxSize int64, needCryptKey bool, ttl int64) Cache {
 	}
 
 	mc := &memCache{
-		maxSize:      maxSize,
 		needCryptKey: needCryptKey,
 		m:            make(map[interface{}]*lru.Node),
 	}

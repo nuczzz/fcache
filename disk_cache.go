@@ -22,12 +22,6 @@ type diskCache struct {
 	// lock lock of disk cache
 	lock sync.RWMutex
 
-	// maxSize max size of memory cache data(byte).
-	maxSize int64
-
-	// curSize current size of memory cache data.
-	curSize int64
-
 	// hitCount hit cache count
 	hitCount int64
 
@@ -59,7 +53,6 @@ func (dc *diskCache) createFile(key string, value []byte) error {
 
 func (dc *diskCache) addNodeCallback() func(node *lru.Node) {
 	return func(node *lru.Node) {
-		dc.curSize += node.Length
 		dc.m[node.Key] = node
 	}
 }
@@ -134,7 +127,6 @@ func (dc *diskCache) deleteCallBack() func(key interface{}) error {
 		if err := os.Remove(dc.fileName(key.(string))); err != nil {
 			return err
 		}
-		dc.curSize -= dc.m[key].Length
 		delete(dc.m, key)
 		return nil
 	}
@@ -164,7 +156,6 @@ func newDiskCache(maxSize int64, needCryptKey bool, cacheDir string, ttl int64) 
 		cacheDir += "/"
 	}
 	dc := &diskCache{
-		maxSize:      maxSize,
 		needCryptKey: needCryptKey,
 		dir:          cacheDir,
 		m:            make(map[interface{}]*lru.Node),

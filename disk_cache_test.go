@@ -3,8 +3,14 @@ package fcache
 import (
 	"fmt"
 	"testing"
-	"time"
 )
+
+func printList(t *testing.T, cache *diskCache) {
+	list := cache.lru.Traversal()
+	for i := range list {
+		t.Logf("%#v", list[i])
+	}
+}
 
 func TestDiskCacheFileName(t *testing.T) {
 	cache := &diskCache{dir: DefaultDiskCacheDir}
@@ -25,7 +31,7 @@ func TestDiskCacheSet(t *testing.T) {
 		cache.Set(fmt.Sprintf("key%d", i), []byte("1234567890"))
 	}
 	t.Logf("%#v", cache)
-	t.Log(cache.lru.Traversal())
+	printList(t, cache)
 }
 
 func TestDiskCacheGet(t *testing.T) {
@@ -36,7 +42,7 @@ func TestDiskCacheGet(t *testing.T) {
 	t.Logf("%#v", cache)
 	t.Log(cache.Get("key5"))
 	t.Logf("%#v", cache)
-	t.Log(cache.lru.Traversal())
+	printList(t, cache)
 }
 
 func TestDiskCacheEliminate(t *testing.T) {
@@ -47,9 +53,9 @@ func TestDiskCacheEliminate(t *testing.T) {
 	t.Logf("%#v", cache)
 	t.Log(cache.Get("key5"))
 	t.Logf("%#v", cache)
-	t.Log(cache.lru.Traversal())
+	printList(t, cache)
 	t.Log(cache.Set("key10", []byte("hello")))
-	t.Log(cache.lru.Traversal())
+	printList(t, cache)
 	t.Logf("%#v", cache)
 }
 
@@ -59,7 +65,6 @@ func TestDiskCacheInit(t *testing.T) {
 		t.Fatal(err)
 	}
 	t.Logf("%#v", cache)
-	time.Sleep(time.Second)
 	cache.Set("key10", []byte("1111"))
-	t.Log(cache.lru.Traversal())
+	printList(t, cache)
 }
