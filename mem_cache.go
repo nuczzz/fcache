@@ -3,7 +3,8 @@ package fcache
 import (
 	"sync"
 
-	"github.com/nuczzz/lru"
+	//"github.com/nuczzz/lru"
+	"lru"
 )
 
 // memCache memory cache.
@@ -49,12 +50,10 @@ func (mc *memCache) Set(key string, value []byte) error {
 	mc.lock.Lock()
 	defer mc.lock.Unlock()
 
-	if data, ok := mc.m[key]; ok {
-		if err := mc.lru.Delete(data); err != nil {
-			return err
-		}
-	}
 	v := CacheValue{Value: value}
+	if data, ok := mc.m[key]; ok {
+		return mc.lru.Replace(data, v)
+	}
 	// memory cache ignore this error
 	return mc.lru.AddNewNode(key, v)
 }

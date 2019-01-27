@@ -65,12 +65,12 @@ func (dc *diskCache) Set(key string, value []byte) error {
 	dc.lock.Lock()
 	defer dc.lock.Unlock()
 
+	v := CacheValue{Value: value}
 	if data, ok := dc.m[key]; ok {
-		if err := dc.lru.Delete(data); err != nil {
+		if err := dc.lru.Replace(data, v); err != nil {
 			return err
 		}
 	}
-	v := CacheValue{Value: value}
 	return dc.lru.AddNewNode(key, v)
 }
 
