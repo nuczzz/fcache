@@ -160,7 +160,7 @@ func newDiskCache(maxSize int64, needCryptKey bool, cacheDir string, ttl int64) 
 		dir:          cacheDir,
 		m:            make(map[interface{}]*lru.Node),
 	}
-	link := &lru.LRU{
+	dc.lru = &lru.LRU{
 		MaxSize:            maxSize,
 		TTL:                ttl,
 		AddNodeCallBack:    dc.addNodeCallback(),
@@ -168,6 +168,5 @@ func newDiskCache(maxSize int64, needCryptKey bool, cacheDir string, ttl int64) 
 		SetValue:           dc.setValue(),
 		GetValue:           dc.getValue(),
 	}
-	dc.lru = link
 	return dc
 }

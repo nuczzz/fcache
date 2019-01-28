@@ -98,12 +98,11 @@ func newMemCache(maxSize int64, needCryptKey bool, ttl int64) Cache {
 		needCryptKey: needCryptKey,
 		m:            make(map[interface{}]*lru.Node),
 	}
-	link := &lru.LRU{
+	mc.lru = &lru.LRU{
 		MaxSize:            maxSize,
 		TTL:                ttl,
 		AddNodeCallBack:    mc.addNodeCallback(),
 		DeleteNodeCallBack: mc.deleteCallBack(),
 	}
-	mc.lru = link
 	return mc
 }
