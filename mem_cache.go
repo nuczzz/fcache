@@ -3,8 +3,7 @@ package fcache
 import (
 	"sync"
 
-	//"github.com/nuczzz/lru"
-	"lru"
+	"github.com/nuczzz/lru"
 )
 
 // memCache memory cache.
