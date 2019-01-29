@@ -57,7 +57,7 @@ func (dc *diskCache) addNodeCallback() func(node *lru.Node) {
 	}
 }
 
-func (dc *diskCache) Set(key string, value []byte) error {
+func (dc *diskCache) Set(key string, value []byte, extra ...interface{}) error {
 	if dc.needCryptKey {
 		key = MD5(key)
 	}
@@ -71,10 +71,10 @@ func (dc *diskCache) Set(key string, value []byte) error {
 			return err
 		}
 	}
-	return dc.lru.AddNewNode(key, v)
+	return dc.lru.AddNewNode(key, v, extra...)
 }
 
-func (dc *diskCache) Get(key string) ([]byte, error) {
+func (dc *diskCache) Get(key string) (value []byte, extra interface{}, err error) {
 	if dc.needCryptKey {
 		key = MD5(key)
 	}
@@ -86,17 +86,17 @@ func (dc *diskCache) Get(key string) ([]byte, error) {
 	if data, ok := dc.m[key]; ok {
 		node, err := dc.lru.Access(data)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 		if node == nil {
-			return nil, nil
+			return nil, nil, nil
 		}
 
 		dc.hitCount++
-		return node.Value.(CacheValue).Value, nil
+		return node.Value.(CacheValue).Value, node.Extra, nil
 	}
 
-	return nil, nil
+	return nil, nil, nil
 }
 
 // initDir check disk cache directory exist or not, create it if not exist.

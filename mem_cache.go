@@ -41,7 +41,7 @@ func (mc *memCache) addNodeCallback() func(*lru.Node) {
 }
 
 // Set set memory cache with key-value pair, and covered if key already exist.
-func (mc *memCache) Set(key string, value []byte) error {
+func (mc *memCache) Set(key string, value []byte, extra ...interface{}) error {
 	if mc.needCryptKey {
 		key = MD5(key)
 	}
@@ -54,11 +54,11 @@ func (mc *memCache) Set(key string, value []byte) error {
 		return mc.lru.Replace(data, v)
 	}
 	// memory cache ignore this error
-	return mc.lru.AddNewNode(key, v)
+	return mc.lru.AddNewNode(key, v, extra...)
 }
 
 // Get get memory cache with key, a error will be return if key is not exist.
-func (mc *memCache) Get(key string) ([]byte, error) {
+func (mc *memCache) Get(key string) (value []byte, extra interface{}, err error) {
 	if mc.needCryptKey {
 		key = MD5(key)
 	}
@@ -71,13 +71,13 @@ func (mc *memCache) Get(key string) ([]byte, error) {
 		// memory cache ignore this error
 		node, _ := mc.lru.Access(data)
 		if node == nil {
-			return nil, nil
+			return nil, nil, nil
 		}
 
 		mc.hitCount++
-		return node.Value.(CacheValue).Value, nil
+		return node.Value.(CacheValue).Value, node.Extra, nil
 	}
-	return nil, nil
+	return nil, nil, nil
 }
 
 func (mc *memCache) GetHitInfo() (int64, int64) {

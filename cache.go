@@ -12,10 +12,10 @@ func (mv CacheValue) Len() int64 {
 // disk cache or net cache. We implementation cache with LRU algorithm.
 type Cache interface {
 	// Set set cache with key-value pair.
-	Set(key string, value []byte) error
+	Set(key string, value []byte, extra ...interface{}) error
 
 	// Get get cache with key, nil will be return if key is not exist.
-	Get(key string) ([]byte, error)
+	Get(key string) (value []byte, extra interface{}, err error)
 
 	// GetHitInfo get cache hit info, return the count of hit visitor
 	// and the count of total visitor
