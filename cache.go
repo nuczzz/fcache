@@ -10,6 +10,7 @@ func (mv CacheValue) Len() int64 {
 
 // Cache cache interface definition.The cache can be memory cache,
 // disk cache or net cache. We implementation cache with LRU algorithm.
+// Note: disk cache NOT support 'extra' field in current version.
 type Cache interface {
 	// Set set cache with key-value pair.
 	Set(key string, value []byte, extra ...interface{}) error
@@ -20,12 +21,19 @@ type Cache interface {
 	// GetHitInfo get cache hit info, return the count of hit visitor
 	// and the count of total visitor
 	GetHitInfo() (hitCount, totalCount int64)
+
+	// Clear clear cache with key
+	Clear(key string) error
+
+	// ClearAll clear all cache
+	ClearAll() error
 }
 
-// NewMemCache return a memory cache instance.Param of maxSize:
-// memory cache max size.Param of needCryptKey:if set true, crypt
-// key(with md5), if key is too long, crypt key maybe better choice.
-// Param of ttl:time to live of cache data(second).
+// NewMemCache return a memory cache instance.
+// maxSize: memory cache max size.
+// needCryptKey:if set true, crypt key(with md5), if key is too long,
+// crypt key maybe better choice.
+// ttl:time to live of cache data(second).
 func NewMemCache(maxSize int64, needCryptKey bool, ttl ...int64) Cache {
 	if len(ttl) > 0 {
 		return newMemCache(maxSize, needCryptKey, ttl[0])

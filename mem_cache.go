@@ -87,6 +87,33 @@ func (mc *memCache) GetHitInfo() (int64, int64) {
 	return mc.hitCount, mc.totalCount
 }
 
+func (mc *memCache) Clear(key string) error {
+	if mc.needCryptKey {
+		key = MD5(key)
+	}
+
+	mc.lock.RLock()
+	defer mc.lock.RUnlock()
+
+	if data, ok := mc.m[key]; ok {
+		return mc.lru.Delete(data)
+	}
+	return nil
+}
+
+func (mc *memCache) ClearAll() error {
+	mc.lock.RLock()
+	defer mc.lock.RUnlock()
+
+	var err error
+	for _, node := range mc.lru.Traversal() {
+		if err = mc.lru.Delete(node); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func newMemCache(maxSize int64, needCryptKey bool, ttl int64) Cache {
 	if maxSize <= 0 {
 		maxSize = DefaultMaxMemCacheSize

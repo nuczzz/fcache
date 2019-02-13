@@ -6,6 +6,7 @@ import (
 	"sync"
 
 	"github.com/nuczzz/lru"
+	"time"
 )
 
 // diskCache disk cache
@@ -110,8 +111,42 @@ func (dc *diskCache) initDir() error {
 }
 
 // init read disk cache file info when create new disk cache
+// todo: how to store and read EXTRA field??
 func (dc *diskCache) init() error {
-	// todo
+	files, err := ioutil.ReadDir(dc.dir)
+	if err != nil {
+		return err
+	}
+
+	now := time.Now().Unix()
+	for _, file := range files {
+		fileName := dc.fileName(file.Name())
+		if file.IsDir() {
+			continue
+		}
+
+		fi, err := GetFileTime(fileName)
+		if err != nil {
+			return err
+		}
+
+		node := &lru.Node{
+			Key:        file.Name(),
+			Length:     file.Size(),
+			AccessTime: fi.AccessTime / 1e9,
+		}
+		if dc.lru.TTL > 0 {
+			if fi.AccessTime/1e9+dc.lru.TTL <= time.Now().Unix() {
+				os.Remove(dc.dir + file.Name())
+				continue
+			} else {
+				node.SetExpire(now + dc.lru.TTL)
+			}
+		}
+
+		dc.lru.Add(node)
+		dc.m[node.Key] = node
+	}
 	return nil
 }
 
@@ -143,6 +178,33 @@ func (dc *diskCache) getValue() func(interface{}) (lru.Value, error) {
 		value, err := ioutil.ReadFile(dc.fileName(key.(string)))
 		return CacheValue{Value: value}, err
 	}
+}
+
+func (dc *diskCache) Clear(key string) error {
+	if dc.needCryptKey {
+		key = MD5(key)
+	}
+
+	dc.lock.RLock()
+	defer dc.lock.RUnlock()
+
+	if data, ok := dc.m[key]; ok {
+		return dc.lru.Delete(data)
+	}
+	return nil
+}
+
+func (dc *diskCache) ClearAll() error {
+	dc.lock.RLock()
+	defer dc.lock.RUnlock()
+
+	var err error
+	for _, node := range dc.lru.Traversal() {
+		if err = dc.lru.Delete(node); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func newDiskCache(maxSize int64, needCryptKey bool, cacheDir string, ttl int64) Cache {
