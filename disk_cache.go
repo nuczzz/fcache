@@ -6,6 +6,7 @@ import (
 	"sync"
 
 	"github.com/nuczzz/lru"
+	"sync/atomic"
 	"time"
 )
 
@@ -83,7 +84,7 @@ func (dc *diskCache) Get(key string) (value []byte, extra interface{}, err error
 	dc.lock.Lock()
 	defer dc.lock.Unlock()
 
-	dc.totalCount++
+	atomic.AddInt64(&dc.totalCount, 1)
 	if data, ok := dc.m[key]; ok {
 		node, err := dc.lru.Access(data)
 		if err != nil {
@@ -93,7 +94,7 @@ func (dc *diskCache) Get(key string) (value []byte, extra interface{}, err error
 			return nil, nil, nil
 		}
 
-		dc.hitCount++
+		atomic.AddInt64(&dc.hitCount, 1)
 		return node.Value.(CacheValue).Value, node.Extra, nil
 	}
 

@@ -4,6 +4,7 @@ import (
 	"sync"
 
 	"github.com/nuczzz/lru"
+	"sync/atomic"
 )
 
 // memCache memory cache.
@@ -66,7 +67,7 @@ func (mc *memCache) Get(key string) (value []byte, extra interface{}, err error)
 	mc.lock.RLock()
 	defer mc.lock.RUnlock()
 
-	mc.totalCount++
+	atomic.AddInt64(&mc.totalCount, 1)
 	if data, ok := mc.m[key]; ok {
 		// memory cache ignore this error
 		node, _ := mc.lru.Access(data)
@@ -74,7 +75,7 @@ func (mc *memCache) Get(key string) (value []byte, extra interface{}, err error)
 			return nil, nil, nil
 		}
 
-		mc.hitCount++
+		atomic.AddInt64(&mc.hitCount, 1)
 		return node.Value.(CacheValue).Value, node.Extra, nil
 	}
 	return nil, nil, nil
