@@ -155,7 +155,7 @@ func (dc *diskCache) GetHitInfo() (int64, int64) {
 	dc.lock.RLock()
 	defer dc.lock.RUnlock()
 
-	return dc.hitCount, dc.totalCount
+	return atomic.LoadInt64(&dc.hitCount), atomic.LoadInt64(&dc.totalCount)
 }
 
 func (dc *diskCache) deleteCallBack() func(key interface{}) error {

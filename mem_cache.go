@@ -85,7 +85,7 @@ func (mc *memCache) GetHitInfo() (int64, int64) {
 	mc.lock.RLock()
 	defer mc.lock.RUnlock()
 
-	return mc.hitCount, mc.totalCount
+	return atomic.LoadInt64(&mc.hitCount), atomic.LoadInt64(&mc.totalCount)
 }
 
 func (mc *memCache) Clear(key string) error {
