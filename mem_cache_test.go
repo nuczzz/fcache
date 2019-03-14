@@ -51,3 +51,16 @@ func TestMemCache(t *testing.T) {
 	t.Logf("%#v", cache)
 	t.Log(cache.lru.Traversal())
 }
+
+func TestSetDeleteSet(t *testing.T) {
+	cache := newMemCache(100, false, 0).(*memCache)
+	t.Log(cache.Set("key", []byte("value")))
+	t.Log(cache.Set("key1", []byte("value1")))
+	t.Log(cache.Get("key"))
+	t.Log(cache.lru.Traversal())
+	t.Log(cache.Clear("key"))
+	t.Log(cache.Get("key"))
+	t.Log(cache.Get("key1"))
+	t.Log(cache.Set("key", []byte("value")))
+	t.Log(cache.Get("key"))
+}
